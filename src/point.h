@@ -8,9 +8,9 @@
  * A point may not belong to any cluster.
  * For such cases we deem the point to be
  * Either noise, or unclassified. */
-const int NOISE = -2;
-const int UNASSIGNED = -1;
-const int UNCLASSIFIED = -1;
+extern const int NOISE = -2;
+extern const int UNASSIGNED = -1;
+extern const int UNCLASSIFIED = -1;
 
 class Point {
 
