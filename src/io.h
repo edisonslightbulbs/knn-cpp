@@ -32,33 +32,34 @@ static std::string pwd()
     return workingDir;
 }
 
-static void read(std::shared_ptr<std::vector<Point*>>& sharedPtr_points3d,
-    const char* t_file)
+static std::vector<Point*> read(
+    std::vector<Point*> t_points3d, const char* t_file)
 {
     Timer timer;
-    /* file stream and string for parsing csv file */
+    /** create input stream and string for parsing file data */
     std::ifstream data(t_file);
     std::string line;
 
-    int pointId = 1;
-    /* get each line in csv */
+    /** while un-parsed lines exist ... */
     while (std::getline(data, line)) {
+
+        /** ... get next line in file */
         std::stringstream ss(line);
         std::string cell;
         std::vector<std::string> row;
 
-        /* parse each line */
+        /** ... parse each line using ' ' as a delimiter */
         while (std::getline(ss, cell, ' ')) {
             row.push_back(cell);
         }
-        /* create points */
-        Point* ptr_point = new Point3d(pointId, (float)std::stof(row[0]),
+
+        /** create Point type definitions */
+        Point* ptr_point = new Point3d(UNASSIGNED, (float)std::stof(row[0]),
             (float)std::stof(row[1]), (float)std::stof(row[2]));
-        sharedPtr_points3d->push_back(ptr_point);
-        pointId++;
+        t_points3d.push_back(ptr_point);
     }
-    LOG(INFO) << "parsing data took: " << timer.getDuration();
-    /* todo: a missing step here is to sort the data */
+    LOG(INFO) << "Data parsed successfully in: " << timer.getDuration();
+    return t_points3d;
 }
 
 static void write(const std::shared_ptr<pool>& sharedPtr_neighbourLists,
