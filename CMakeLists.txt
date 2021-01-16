@@ -60,6 +60,6 @@ if(GRAPH)
     add_custom_command(TARGET knn
         POST_BUILD
         COMMAND ./build/bin/knn --logtostderr=1
-        COMMAND vi ./build/output_data.txt
+        COMMAND /usr/bin/python3 ./scripts/graph.py
         WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
 endif()
