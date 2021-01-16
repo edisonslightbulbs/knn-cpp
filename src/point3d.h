@@ -14,9 +14,10 @@ public:
 
     float distance(Point* ptr_point3d) override
     {
-        return sqrt((ptr_point3d->m_x - m_x) * (ptr_point3d->m_x - m_x)
-            + (ptr_point3d->m_y - m_y) * (ptr_point3d->m_y - m_y)
-            + (ptr_point3d->m_z - m_z) * (ptr_point3d->m_z - m_z));
+        float x = m_x - ptr_point3d->m_x;
+        float y = m_y - ptr_point3d->m_y;
+        float z = m_z - ptr_point3d->m_z;
+        return (float)std::sqrt((x * x) + (y * y) + (z * z));
     }
 };
 #endif /* POINT3D_H */
