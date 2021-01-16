@@ -1,6 +1,4 @@
-#include <Eigen/Dense>
 #include <future>
-#include <iostream>
 #include <memory>
 #include <set>
 #include <utility>
@@ -9,58 +7,53 @@
 #include "io.h"
 #include "logger.h"
 #include "point.h"
-#include "point3d.h"
 #include "timer.h"
+#include "utility.h"
 
-using pool = std::vector<std::vector<int>>;
-
-void knn(const int& t_numNeighbours, std::vector<int>& t_numPointsPerThread,
-    const std::shared_ptr<std::vector<Point*>>& sharedPtr_points3d,
-    const std::shared_ptr<std::vector<std::vector<int>>>&
-        sharedPtr_neighbourLists)
+void knn(const int& K, std::vector<int>& t_issue,
+    const std::shared_ptr<std::vector<Point*>>& sptr_points3d,
+    const std::shared_ptr<std::vector<std::vector<int>>>& sptr_neighbourLists)
 {
     Timer timer;
 
-    /** future knn task */
-    auto knnTask = [sharedPtr_points3d, sharedPtr_neighbourLists,
-                       &t_numNeighbours](
+    /** future knn task? */
+    auto knnTask = [sptr_points3d, sptr_neighbourLists, &K](
                        int firstIndex, int lastIndex) mutable {
         int index;
         double distance;
 
-        /** for each point ... */
+        /** for each point ... ?*/
         std::set<std::pair<double, int>> tuples;
         for (int pointId = firstIndex; pointId < lastIndex; ++pointId) {
             tuples.clear();
             index = 0;
 
-            for (auto* point3d : *sharedPtr_points3d) {
+            for (auto* point3d : *sptr_points3d) {
                 index++;
                 if (pointId == index) {
                     continue;
                 }
-                /** ... collect the distance  to every other point */
-                distance = (*sharedPtr_points3d)[pointId]->distance(point3d);
+                /** ... collect the distance to neighbours? */
+                distance = (*sptr_points3d)[pointId]->distance(point3d);
                 tuples.insert({ distance, point3d->m_id });
             }
             int count = 0;
-            for (auto it = tuples.begin();
-                 it != tuples.end() && count < t_numNeighbours; ++it, ++count) {
+            for (auto it = tuples.begin(); it != tuples.end() && count < K;
+                 ++it, ++count) {
 
-                /** ... and create a list of [k] to-neighbour distances */
-                (*sharedPtr_neighbourLists)[pointId].push_back(it->second);
+                /** ... and create a list of K neighbours? */
+                (*sptr_neighbourLists)[pointId].push_back(it->second);
             }
         }
     };
 
-    /** create  wrapper for asynchronous operations */
+    /** create  wrapper for asynchronous operations? */
     std::vector<std::future<void>> compute;
 
-    /** partition the knn task using the allocated number of
-     *  points per thread and run it using multi-threads */
+    /** partition the knn on threads */
     int startIndex = 0;
     int endIndex = 0;
-    for (const auto& numPoints : t_numPointsPerThread) {
+    for (const auto& numPoints : t_issue) {
         endIndex = startIndex + numPoints;
         compute.push_back(
             std::async(std::launch::async, knnTask, startIndex, endIndex));
@@ -71,94 +64,43 @@ void knn(const int& t_numNeighbours, std::vector<int>& t_numPointsPerThread,
     for (auto& future : compute) {
         future.get();
     }
-    LOG(INFO) << "knn compute completed in: " << timer.getDuration();
+    LOG(INFO) << "knn computed successfully in: " << timer.getDuration();
 }
 
-std::vector<int> computePointsPerThread(
-    const int& t_numThreads, const int& t_numPoints)
-{
-    /** find number of points to process per thread */
-    int pointsPerThread = t_numPoints / t_numThreads;
-
-    /** take care of any (possible) surplus points */
-    int surplusPoints = pointsPerThread + t_numPoints % t_numThreads;
-
-    /** save thread config */
-    std::vector<int> numPointsPerThread(t_numThreads, pointsPerThread);
-    numPointsPerThread.back() = surplusPoints;
-
-    return numPointsPerThread;
-}
-static void sort(std::shared_ptr<std::vector<Point*>>& t_sharedPtr_points3d)
-{
-
-    /** express vec and matrix */
-    Eigen::MatrixXd points3dMat(t_sharedPtr_points3d->size(), 3);
-    int row = 0;
-    for (auto* ptr_point : *t_sharedPtr_points3d) {
-        /** create corresponding eigen matrix */
-        points3dMat(row, 0) = ptr_point->m_x;
-        points3dMat(row, 1) = ptr_point->m_y;
-        points3dMat(row, 2) = ptr_point->m_z;
-        row++;
-    }
-
-    Point* centroid = new Point3d(-1, (float)points3dMat.col(0).mean(),
-        (float)points3dMat.col(1).mean(), (float)points3dMat.col(2).mean());
-
-    /** sort point based on magnitude */
-    // float distance = __DBL_MAX__;
-
-    // std::shared_ptr<std::vector<Point*>> points3dCopy = t_sharedPtr_points3d;
-
-    // for (auto* ptr_point3d : *sharedPtr_points3d) {
-    //     // distance = ptr_point3d->distance(&t_centroid);
-    //     // if (distance < m_ann) {
-    //     //     m_ann = distance;
-    //     // }
-    // }
-
-    // /** allocate ids' to sorted points */
-    // int id = 1;
-    // for (auto* ptr_point3d : *sharedPtr_points3d) {
-    //     id++;
-    // }
-}
+using pool = std::vector<std::vector<int>>;
 
 int main(int argc, char* argv[])
 {
     /** initialize logger */
     logger(argc, argv);
 
-    /** file with input data */
-    const std::string INPUT_FILE = pwd() + "/resources/input_data.txt";
+    /** disk resources */
+    const std::string INPUT_FILE = pwd() + "/resources/test.txt";
+    const std::string OUTPUT_FILE = pwd() + "/build/output_data.txt";
 
-    /** create a shared pointer for the 3d points */
-    std::shared_ptr<std::vector<Point*>> sharedPtr_points3d(
-        new std::vector<Point*>);
+    /** parse data */
+    std::vector<Point*> points3d;
+    points3d = read(points3d, INPUT_FILE.c_str());
 
-    /** parse input data file */
-    read(sharedPtr_points3d, INPUT_FILE.c_str());
+    /** sort points (use ascending euclidean distance from centroid) */
+    points3d = order(points3d);
 
-    sort(sharedPtr_points3d);
+    /** create shared pointer to points */
+    auto sptr_points3d = std::make_shared<std::vector<Point*>>(points3d);
 
     /** configure threads and points per thread */
-    const int THREADS_COUNT = 4;
-    std::vector<int> pointsPerThread
-        = computePointsPerThread(THREADS_COUNT, sharedPtr_points3d->size());
+    const int THREADS = 4;
+    std::vector<int> issue = multithread(THREADS, sptr_points3d->size());
 
-    /** create a shared pointer for list of neighbours */
-    std::shared_ptr<pool> sharedPtr_neighbourLists(
-        new pool(sharedPtr_points3d->size()));
+    /** create a shared pointer to neighbours? */
+    std::shared_ptr<pool> sptr_neighbourLists(new pool(sptr_points3d->size()));
 
-    const int NEIGHBOUR_COUNT = 2;
+    /** compute knn */
+    const int K = 2;
+    knn(K, issue, sptr_points3d, sptr_neighbourLists);
 
-    /** compute k nearest neighbour */
-    knn(NEIGHBOUR_COUNT, pointsPerThread, sharedPtr_points3d,
-        sharedPtr_neighbourLists);
-
-    const std::string OUTPUT_FILE = pwd() + "/build/output_data.txt";
-    write(sharedPtr_neighbourLists, OUTPUT_FILE);
+    /** output knn */
+    write(sptr_neighbourLists, OUTPUT_FILE);
 
     return PASS;
 }
