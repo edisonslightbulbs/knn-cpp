@@ -8,7 +8,7 @@
 #include "logger.h"
 #include "point3d.h"
 
-static void show(std::vector<Point*> t_points3d)
+static void show(const std::vector<Point*>& t_points3d)
 {
     for (auto* point3d : t_points3d) {
         LOG(INFO) << "ID: " << point3d->m_id << " label: " << point3d->m_cluster
@@ -18,7 +18,7 @@ static void show(std::vector<Point*> t_points3d)
     }
 }
 
-static void show(std::shared_ptr<std::vector<Point*>> sptr_points3d)
+static void show(const std::shared_ptr<std::vector<Point*>>& sptr_points3d)
 {
     for (auto* point3d : *sptr_points3d) {
         LOG(INFO) << "ID: " << point3d->m_id << " label: " << point3d->m_cluster
@@ -28,7 +28,7 @@ static void show(std::shared_ptr<std::vector<Point*>> sptr_points3d)
     }
 }
 
-static Point3d getCentroid(std::vector<Point*> t_points3d)
+static Point3d getCentroid(std::vector<Point*>& t_points3d)
 {
     /** express vec as mat */
     const int COLUMNS = 3;
@@ -42,8 +42,8 @@ static Point3d getCentroid(std::vector<Point*> t_points3d)
         row++;
     }
 
-    return Point3d(-1, (float)points3dMat.col(0).mean(),
-        (float)points3dMat.col(1).mean(), (float)points3dMat.col(2).mean());
+    return Point3d{-1, (float)points3dMat.col(0).mean(),
+        (float)points3dMat.col(1).mean(), (float)points3dMat.col(2).mean()};
 }
 
 static bool comparePoints(const Point* t_point, const Point* t_other)
@@ -54,11 +54,29 @@ static bool comparePoints(const Point* t_point, const Point* t_other)
     return t_point->m_distance < t_other->m_distance;
 }
 
+static void tag(std::shared_ptr<std::vector<Point*>>& sptr_points3d)
+{
+    int id = 1;
+    for (auto* point3d : *sptr_points3d) {
+        point3d->m_id = id;
+        id++;
+    }
+}
+
+static void tag(std::vector<Point*>& t_points3d)
+{
+    int id = 1;
+    for (auto* point3d : t_points3d) {
+        point3d->m_id = id;
+        id++;
+    }
+}
+
 static std::vector<Point*> order(std::vector<Point*> t_points3d)
 {
     /** evaluate centroid */
-    Point3d point3d = getCentroid(t_points3d);
-    Point* centroid = &point3d;
+    Point3d position = getCentroid(t_points3d);
+    Point* centroid = &position;
     LOG(INFO) << "centroid = " << centroid;
 
     /** find distance to each point from centroid */
@@ -70,12 +88,7 @@ static std::vector<Point*> order(std::vector<Point*> t_points3d)
     /** sort points based on distance to centroid */
     std::sort(t_points3d.begin(), t_points3d.end(), comparePoints);
 
-    /** tag sorted points with in-order IDs */
-    int id = 1;
-    for (auto* point3d : t_points3d) {
-        point3d->m_id = id;
-        id++;
-    }
+    tag(t_points3d);
     return t_points3d;
 }
 
