@@ -19,7 +19,7 @@
 #define getCurrentDir getcwd
 #endif
 
-using pool = std::vector<std::vector<int>>;
+#define neighbours std::vector<std::vector<Point*>>
 
 extern const int PASS = 0;
 // extern const int FAIL = -3;
@@ -62,25 +62,19 @@ static std::vector<Point*> read(
     return t_points3d;
 }
 
-static void write(const std::shared_ptr<pool>& sharedPtr_neighbourLists,
-    const std::string& t_file)
+static void write(
+        const std::shared_ptr<neighbours>& sptr_pool, const std::string& t_file)
 {
     std::ofstream filestream;
     filestream.open(t_file);
     filestream << "id,nn1" << std::endl;
 
-    std::ostringstream pointIndex;
+    for (auto& points3d : *sptr_pool) {
 
-    for (auto& neighbourList : *sharedPtr_neighbourLists) {
-
-        for (auto& neighbour : neighbourList) {
-            pointIndex << neighbour << ",";
+        for (auto& point3d : points3d) {
+            filestream << point3d->m_id << ", " << point3d->m_distance
+                       << std::endl;
         }
-        /** malarkey of dynamic csv file delimiters */
-        std::string str = pointIndex.str();
-        str.pop_back();
-        filestream << str << std::endl;
-        pointIndex.str(std::string());
     }
     filestream.close();
 }
