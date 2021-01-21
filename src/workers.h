@@ -6,13 +6,13 @@
 
 #include "point.h"
 
-class Worker {
+class Workers {
 
 public:
     /** distributed points to work on */
     std::shared_ptr<std::vector<std::vector<Point>>> sptr_work;
 
-    Worker();
-    Worker(const int& t_T, const std::vector<Point>& t_points);
+    Workers();
+    Workers(const int& t_T, const std::vector<Point>& t_points);
 };
 #endif /* WORKERS_H */

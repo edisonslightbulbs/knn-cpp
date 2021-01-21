@@ -24,7 +24,7 @@ static void sortNeighbours(
 }
 
 static void computeKnn(const std::vector<Point>& t_points,
-    const Worker& t_workers,
+    const Workers& t_workers,
     std::shared_ptr<std::vector<std::vector<Point>>> sptr_neighbours)
 {
     /** asynchronous task to knnTasks */
@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
 
     /** distribute points on threads */
     const int T = 4;
-    Worker workers(T, points);
+    Workers workers(T, points);
 
     /** create shared neighbour lists */
     std::shared_ptr<std::vector<std::vector<Point>>> sptr_neighbours;

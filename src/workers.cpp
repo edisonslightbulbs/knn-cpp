@@ -2,9 +2,9 @@
 
 #include "workers.h"
 
-Worker::Worker() = default;
+Workers::Workers() = default;
 
-Worker::Worker(const int& t_T, const std::vector<Point>& t_points)
+Workers::Workers(const int& t_T, const std::vector<Point>& t_points)
 {
     /** distribute points over specified number of threads*/
     int pointsPerThread = (int)t_points.size() / t_T;
