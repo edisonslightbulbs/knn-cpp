@@ -23,10 +23,12 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
-# clang-tidy rules (good dev practice)
+# clang-tidy
 set(CMAKE_CXX_CLANG_TIDY
-    clang-tidy -p pwd
-    --checks=-*,readability-*,clang-analyzer-*,performance-*)
+    clang-tidy -p pwd -header-filter=.*
+    --checks=-*,readability-*,performance-*)
+
+# --checks=clang-analyzer-*)
 
 # build shared library (on)
 option(BUILD_SHARED_LIBS "Build Shared Library" ON)
@@ -41,6 +43,9 @@ find_package(glog REQUIRED)
 
 # define project target
 add_executable(knn
+    ${SRC_DIR}/io.cpp
+    ${SRC_DIR}/worker.cpp
+    ${SRC_DIR}/point.cpp
     ${SRC_DIR}/main.cpp
     )
 

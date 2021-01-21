@@ -1,3 +1,4 @@
+#include <future>
 #include <memory>
 #include <vector>
 
@@ -5,40 +6,77 @@
 #include "knn.h"
 #include "logger.h"
 #include "point.h"
-#include "utility.h"
+#include "timer.h"
+#include "worker.h"
+
+extern const int PASS = 0;
 
 int main(int argc, char* argv[])
 {
     /** initialize logger */
     logger(argc, argv);
 
-    /** disk resources */
-    const std::string INPUT_FILE = pwd() + "/resources/test.txt";
+    /** resources */
+    const std::string INPUT_FILE = pwd() + "/resources/input_data.txt";
     const std::string OUTPUT_FILE = pwd() + "/build/output_data.txt";
 
     /** parse data */
-    std::vector<Point*> points3d;
-    points3d = read(points3d, INPUT_FILE.c_str());
+    std::vector<Point> points;
+    points = IO::read(points, INPUT_FILE.c_str());
 
-    /** sort points (use ascending euclidean distance from centroid) */
-    points3d = order(points3d);
+    /** distribute points on threads */
+    const int T = 4;
+    Worker worker(T, points);
 
-    /** create shared pointer to points */
-    auto sptr_points3d = std::make_shared<std::vector<Point*>>(points3d);
+    std::shared_ptr<std::vector<std::vector<Point>>> sptr_neighbours;
+    sptr_neighbours
+        = std::make_shared<std::vector<std::vector<Point>>>(points.size());
 
-    /** configure threads and points per thread */
-    const int THREADS = 6;
-    std::vector<int> issue = multithread(THREADS, sptr_points3d->size());
+    /** asynchronous task to compute */
+    auto knnTask = [points, sptr_neighbours](std::vector<Point> work) mutable {
+        Knn knn(points, work, sptr_neighbours);
+    };
 
-    /** create a shared pointer to neighbours? */
-    std::shared_ptr<neighbours> sptr_neighbourLists(new neighbours(sptr_points3d->size()));
+    /** create list of asynchronous tasks */
+    std::vector<std::future<void>> compute;
 
-    /** compute knn */
+    /** distribute asynchronous work for each thread */
+    for (auto& work : *worker.sptr_work) {
+        compute.push_back(std::async(std::launch::async, knnTask, work));
+    }
+
+    /** do asynchronous work */
+    {
+        Timer timer;
+        for (auto& future : compute) {
+            future.get();
+        }
+        LOG(INFO) << "knn computed in: " << timer.getDuration();
+    }
+
+    /** sort neighbour lists | metric = euclidean distance */
+    {
+        Timer timer;
+        for (auto& neighbours : *sptr_neighbours) {
+            // todo sort each list on a separate thread !!
+            std::sort(neighbours.begin(), neighbours.end(), Point::compare);
+        }
+        LOG(INFO) << "neighbours sorted in: " << timer.getDuration();
+    }
+
+    /** for each point: output its K nearest neighbours */
     const int K = 1;
-    knn(K, issue, sptr_points3d, sptr_neighbourLists);
-
-    /** output knn */
-    write(sptr_neighbourLists, OUTPUT_FILE);
+    IO::write(K, *sptr_neighbours, OUTPUT_FILE);
 
     return PASS;
 }
+
+/* notes:
+ *
+ * knn execution time:
+ *   29.438944 seconds (before optimization)
+ *    1.234707 seconds (after optimization)
+ *
+ * sorting execution time:
+ *   29.438944 seconds (before optimization)
+ *    1.234707 seconds (after optimization) */

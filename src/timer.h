@@ -4,6 +4,16 @@
 #include "logger.h"
 #include <chrono>
 #include <cmath>
+#include <thread>
+
+using namespace std::this_thread;     // sleep_for, sleep_until
+using namespace std::chrono_literals; // ns, us, ms, s, h, etc.
+
+// #define wait sleep_for
+constexpr double second = 1000000;
+constexpr double millisecond = 1000;
+constexpr double nanosecond = 1000;
+constexpr double tosecond = 0.000001;
 
 class Timer {
 private:
@@ -27,18 +37,32 @@ public:
 
         auto duration = stop - start; // duration in micro seconds
 
-        if (duration < 1000000 && duration > 1000) {
-            double ms = duration * 0.001;
+        if (duration < second && duration > millisecond) {
+            double ms = (double)duration * nanosecond;
             return std::to_string(ms) + "ms";
-        } else if (duration > 1000000) {
-            double s = duration * 0.000001;
-            return std::to_string(s) + "s";
-        } else {
-            return std::to_string(duration) + "us";
         }
+        if (duration > second) {
+            double s = duration * tosecond;
+            return std::to_string(s) + "s";
+        }
+        return std::to_string(duration) + "us";
     }
 
-    ~Timer() { }
+    ~Timer() = default;
 };
 
 #endif /* TIMER_H */
+
+/**
+ * C style time delay
+ * see:
+ * https://stackoverflow.com/questions/158585/how-do-you-add-a-timed-delay-to-a-c-program
+ * date: 2021-01-18 15:48
+ */
+
+/**
+ * constexpr
+ * see:
+ * https://www.geeksforgeeks.org/understanding-constexper-specifier-in-c/
+ * date: 2021-01-20 15:21
+ */
