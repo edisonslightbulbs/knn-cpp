@@ -73,10 +73,6 @@ int main(int argc, char* argv[])
 
 /* notes:
  *
- * knn execution time:
- *   29.438944 seconds (before optimization)
- *    1.234707 seconds (after optimization)
- *
  * sorting execution time:
- *   29.438944 seconds (before optimization)
+ *   16.090868 seconds (before optimization)
  *    1.234707 seconds (after optimization) */
