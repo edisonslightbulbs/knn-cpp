@@ -1,5 +1,5 @@
-#ifndef WORKER_H
-#define WORKER_H
+#ifndef WORKERS_H
+#define WORKERS_H
 
 #include <memory>
 #include <vector>
@@ -15,4 +15,4 @@ public:
     Worker();
     Worker(const int& t_T, const std::vector<Point>& t_points);
 };
-#endif /* WORKER_H */
+#endif /* WORKERS_H */

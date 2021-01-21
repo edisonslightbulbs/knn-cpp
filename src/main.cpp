@@ -7,9 +7,37 @@
 #include "logger.h"
 #include "point.h"
 #include "timer.h"
-#include "worker.h"
+#include "workers.h"
 
 extern const int PASS = 0;
+
+static void computeKnn(const std::vector<Point>& t_points,
+    const Worker& t_workers,
+    std::shared_ptr<std::vector<std::vector<Point>>> sptr_neighbours)
+{
+    /** asynchronous task to knnTasks */
+    auto knnTask
+        = [t_points, sptr_neighbours](std::vector<Point> worker) mutable {
+              Knn knn(t_points, worker, sptr_neighbours);
+          };
+
+    /** create list of asynchronous tasks */
+    std::vector<std::future<void>> knnTasks;
+
+    /** distribute asynchronous work for each thread */
+    for (auto& worker : *t_workers.sptr_work) {
+        knnTasks.push_back(std::async(std::launch::async, knnTask, worker));
+    }
+
+    /** do asynchronous work */
+    {
+        Timer timer;
+        for (auto& task : knnTasks) {
+            task.get();
+        }
+        LOG(INFO) << "knn computed in: " << timer.getDuration();
+    }
+}
 
 int main(int argc, char* argv[])
 {
@@ -26,33 +54,13 @@ int main(int argc, char* argv[])
 
     /** distribute points on threads */
     const int T = 4;
-    Worker worker(T, points);
+    Worker workers(T, points);
 
     std::shared_ptr<std::vector<std::vector<Point>>> sptr_neighbours;
     sptr_neighbours
         = std::make_shared<std::vector<std::vector<Point>>>(points.size());
 
-    /** asynchronous task to compute */
-    auto knnTask = [points, sptr_neighbours](std::vector<Point> work) mutable {
-        Knn knn(points, work, sptr_neighbours);
-    };
-
-    /** create list of asynchronous tasks */
-    std::vector<std::future<void>> compute;
-
-    /** distribute asynchronous work for each thread */
-    for (auto& work : *worker.sptr_work) {
-        compute.push_back(std::async(std::launch::async, knnTask, work));
-    }
-
-    /** do asynchronous work */
-    {
-        Timer timer;
-        for (auto& future : compute) {
-            future.get();
-        }
-        LOG(INFO) << "knn computed in: " << timer.getDuration();
-    }
+    computeKnn(points, workers, sptr_neighbours);
 
     /** sort neighbour lists | metric = euclidean distance */
     {

@@ -44,7 +44,7 @@ find_package(glog REQUIRED)
 # define project target
 add_executable(knn
     ${SRC_DIR}/io.cpp
-    ${SRC_DIR}/worker.cpp
+    ${SRC_DIR}/workers.cpp
     ${SRC_DIR}/point.cpp
     ${SRC_DIR}/main.cpp
     )
