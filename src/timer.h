@@ -10,10 +10,10 @@ using namespace std::this_thread;     // sleep_for, sleep_until
 using namespace std::chrono_literals; // ns, us, ms, s, h, etc.
 
 // #define wait sleep_for
-constexpr double second = 1000000;
-constexpr double millisecond = 1000;
-constexpr double nanosecond = 1000;
-constexpr double tosecond = 0.000001;
+constexpr double SECOND = 1000000;
+constexpr double MILLISECOND = 1000;
+constexpr double TO_SECOND = 0.000001;
+constexpr double TO_MILLISECOND = 0.001;
 
 class Timer {
 private:
@@ -35,14 +35,15 @@ public:
                   .time_since_epoch()
                   .count();
 
-        auto duration = stop - start; // duration in micro seconds
+        auto duration = stop - start; // micro seconds
 
-        if (duration < second && duration > millisecond) {
-            double ms = (double)duration * nanosecond;
+        /** friendly output */
+        if (duration < SECOND && duration > MILLISECOND) {
+            double ms = (double)duration * TO_MILLISECOND;
             return std::to_string(ms) + "ms";
         }
-        if (duration > second) {
-            double s = duration * tosecond;
+        if (duration > SECOND) {
+            double s = duration * TO_SECOND;
             return std::to_string(s) + "s";
         }
         return std::to_string(duration) + "us";
