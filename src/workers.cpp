@@ -2,7 +2,7 @@
 
 #include "workers.h"
 
-Workers::Workers() = default;
+Workers::Workers () = default;
 
 Workers::Workers(const int& t_T, const std::vector<Point>& t_points)
 {
