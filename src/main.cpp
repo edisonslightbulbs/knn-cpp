@@ -11,18 +11,6 @@
 
 extern const int PASS = 0;
 
-static void sortNeighbours(
-    std::shared_ptr<std::vector<std::vector<Point>>>& sptr_neighbours)
-{
-    /** sort neighbour lists | metric = euclidean distance */
-    Timer timer;
-    for (auto& neighbours : *sptr_neighbours) {
-        // todo sort each list on a separate thread !!
-        std::sort(neighbours.begin(), neighbours.end(), Point::compare);
-    }
-    LOG(INFO) << "neighbours sorted in: " << timer.getDuration();
-}
-
 static void computeKnn(const std::vector<Point>& t_points,
     const Workers& t_workers,
     std::shared_ptr<std::vector<std::vector<Point>>> sptr_neighbours)
@@ -75,11 +63,13 @@ int main(int argc, char* argv[])
 
     /** knn */
     computeKnn(points, workers, sptr_neighbours);
-    sortNeighbours(sptr_neighbours);
 
-    /** for each point: output its K nearest neighbours */
+    /** ID of point of interest and its K neighbours */
+    const int ID = 0;
     const int K = 1;
-    IO::write(K, *sptr_neighbours, OUTPUT_FILE);
+
+    /** for each point(ID) output its K nearest neighbours */
+    IO::write(ID, K, *sptr_neighbours, OUTPUT_FILE);
 
     return PASS;
 }
