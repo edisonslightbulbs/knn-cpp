@@ -1,4 +1,13 @@
 #include "io.h"
+#include "logger.h"
+#include "timer.h"
+
+void IO::sortNeighbours(
+    const int& ID, std::vector<std::vector<Point>>& t_neighbours)
+{
+    /** sort neighbour lists | metric = euclidean distance */
+    std::sort(t_neighbours[ID].begin(), t_neighbours[ID].end(), Point::compare);
+}
 
 std::vector<Point> IO::read(std::vector<Point> t_points, const char* t_file)
 {
@@ -32,20 +41,26 @@ std::vector<Point> IO::read(std::vector<Point> t_points, const char* t_file)
     return t_points;
 }
 
-void IO::write(const int& t_K,
+void IO::write(const int& ID, const int& t_K,
     std::vector<std::vector<Point>>& t_neighbours, const std::string& t_file)
 {
+    /** find point using ID and sort its
+     *  neighbours in ascending order */
+    {
+        Timer timer;
+        sortNeighbours(ID, t_neighbours);
+        LOG(INFO) << "sorting took: " << timer.getDuration();
+    }
+
     std::ofstream filestream;
     filestream.open(t_file);
     filestream << "id,nn1" << std::endl;
 
-    /** graph-able index for points already sorted in ascending order */
+    /** graph-able knn of point(ID) */
     int count = 1;
-    for(int i = 0; i < t_K; ++i) {
-        for (auto &point : t_neighbours[i]) {
-            filestream << count << ", " << point.m_distance.second << std::endl;
-            count++;
-        }
+    for (auto& point : t_neighbours[ID]) {
+        filestream << count << ", " << point.m_distance.second << std::endl;
+        count++;
     }
     filestream.close();
 }
