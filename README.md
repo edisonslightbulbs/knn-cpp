@@ -1,18 +1,24 @@
+#### KNN 
+
+Finding the euclidean distance that corresponds to the elbow of a graph, i.e., given graphed output: K =1 & point
+
+![](https://raw.githubusercontent.com/edisonslightbulbs/knn-cpp/main/resources/demo.png)
+
 ##### Dependencies
 
 ###### CXX
 
-*   [glog](https://github.com/google/glog)
+* [glog](https://github.com/google/glog)
 
-*   [gflags](https://github.com/gflags/gflags)
+* [gflags](https://github.com/gflags/gflags)
 
 ###### Python3
 
-*   pip3 install matplotlib
+* pip3 install matplotlib
 
-*   pip3 install pandas
+* pip3 install pandas
 
-*   pip3 install seaborn
+* pip3 install seaborn
 
 ##### Caveat
 
@@ -25,6 +31,7 @@ export CPLUS_INCLUDE_PATH=/usr/local/include
 export LIBRARY_PATH=/usr/local/lib
 ```
 
+
 ##### Usage
 
 from the project root directory
@@ -36,3 +43,4 @@ make
 ```
 
 `CMakeLists.txt` is configured to auto-run the tartget post build (i.e., nothing else is required post build).
+
