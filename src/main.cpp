@@ -73,9 +73,3 @@ int main(int argc, char* argv[])
 
     return PASS;
 }
-
-/* notes:
- *
- * sorting execution time:
- *   16.090868 seconds (before optimization)
- *    1.234707 seconds (after optimization) */
