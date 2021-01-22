@@ -2,6 +2,7 @@
 #define IO_H
 
 #include <fstream>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -29,7 +30,11 @@ public:
     static std::vector<Point> read(
         std::vector<Point> t_points, const char* t_file);
 
-    static void write(const int& K, std::vector<std::vector<Point>>& t_neighbours,
+    static void sortNeighbours(
+        const int& ID, std::vector<std::vector<Point>>& t_neighbours);
+
+    static void write(const int& ID, const int& K,
+        std::vector<std::vector<Point>>& t_neighbours,
         const std::string& t_file);
 };
 
